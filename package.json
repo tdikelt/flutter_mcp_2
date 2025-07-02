@@ -1,0 +1,49 @@
+{
+  "name": "flutter-mcp-service",
+  "version": "1.0.0",
+  "description": "MCP service for Flutter development - Widget analysis, documentation validation, and Pub.dev integration",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node --test tests/**/*.test.js",
+    "test:integration": "jest tests/integration",
+    "test:unit": "jest tests/unit",
+    "test:coverage": "jest --coverage",
+    "health-check": "node tests/health-check.js",
+    "lint": "eslint src/**/*.js",
+    "format": "prettier --write src/**/*.js",
+    "build:docker": "docker build -f docker/Dockerfile -t flutter-mcp-service .",
+    "docker:run": "docker-compose -f docker/docker-compose.yml up",
+    "clean": "rm -rf .cache node_modules",
+    "prepublishOnly": "echo 'Skipping prepublish for now'"
+  },
+  "keywords": [
+    "flutter",
+    "mcp",
+    "dart",
+    "pub.dev",
+    "widget-analysis",
+    "code-quality"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "axios": "^1.7.9",
+    "better-sqlite3": "^12.2.0",
+    "cheerio": "^1.0.0",
+    "crypto": "^1.0.1",
+    "gpt-3-encoder": "^1.1.4",
+    "node-cache": "^5.1.2",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "jest": "^29.7.0",
+    "@jest/globals": "^29.7.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.4"
+  }
+}

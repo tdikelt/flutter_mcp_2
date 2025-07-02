@@ -1,0 +1,36 @@
+{
+  "name": "@flutter-mcp/service",
+  "version": "2.0.0",
+  "description": "Flutter MCP Service - Advanced Flutter development tools via Model Context Protocol",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "flutter-mcp": "./bin/flutter-mcp.js"
+  },
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "keywords": [
+    "flutter",
+    "mcp",
+    "model-context-protocol",
+    "dart",
+    "development-tools",
+    "code-analysis"
+  ],
+  "author": "Flutter MCP Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/flutter-mcp-service.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0",
+    "ora": "^7.0.1",
+    "which": "^4.0.0"
+  }
+}

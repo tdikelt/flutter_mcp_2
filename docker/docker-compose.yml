@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  flutter-mcp:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: flutter-mcp-service
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - MCP_MODE=stdio
+      - CACHE_DIR=/app/.cache
+      - MEMORY_CACHE_TTL=300
+      - WIDGET_ANALYSIS_TTL=86400
+      - PUB_PACKAGE_TTL=43200
+      - MAX_TOKENS=4000
+      - LOG_LEVEL=info
+    volumes:
+      # Persist cache between restarts
+      - flutter-mcp-cache:/app/.cache
+      # Optional: Mount local project for analysis
+      # - ./your-flutter-project:/workspace:ro
+    ports:
+      # Only needed if running in HTTP mode
+      - "3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('./src/tools/unifiedTools.js').flutterStatus()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Optional: Add a web UI for monitoring
+  flutter-mcp-ui:
+    image: nginx:alpine
+    container_name: flutter-mcp-ui
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./web:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - flutter-mcp
+    profiles:
+      - with-ui
+
+volumes:
+  flutter-mcp-cache:
+    driver: local
+
+networks:
+  default:
+    name: flutter-mcp-network
