@@ -1,246 +1,101 @@
-# Flutter MCP Service Architecture
+# Architecture Overview
 
-## Overview
+This MCP service is built to help Flutter developers with code analysis, documentation lookup, and best practices. Here's how it all fits together.
 
-Flutter MCP Service v2.0 is a comprehensive Model Context Protocol (MCP) service designed specifically for Flutter developers. It provides advanced analysis, validation, and code generation capabilities with enterprise-grade features.
+## Core Design
 
-## Architecture Diagram
+The service follows a simple plugin architecture where each tool is independent and can be called via MCP protocol. Think of it as a toolbox where each tool does one thing well.
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        Client Applications                   │
-│                   (Claude Desktop, VS Code, etc.)           │
-└─────────────────────────────────────────────────────────────┘
-                                 │
-                                 │ MCP Protocol
-                                 ▼
-┌─────────────────────────────────────────────────────────────┐
-│                         MCP Server                          │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │                    Request Handler                   │  │
-│  │              (index.js - Tool Router)               │  │
-│  └─────────────────────────────────────────────────────┘  │
-│                              │                              │
-│  ┌───────────────┬───────────┴────────────┬──────────────┐│
-│  │ Unified Tools │    Legacy Tools        │   Services   ││
-│  │               │                        │              ││
-│  │ • flutter_    │ • analyze_widget      │ • Flutter    ││
-│  │   search      │ • validate_flutter_   │   Docs       ││
-│  │ • flutter_    │   docs                │ • Cache      ││
-│  │   analyze     │ • analyze_pub_package │   Manager    ││
-│  │ • flutter_    │ • suggest_            │ • Token      ││
-│  │   status      │   improvements        │   Manager    ││
-│  │               │ • [14 more tools]     │ • Error      ││
-│  │               │                        │   Handler    ││
-│  └───────────────┴────────────────────────┴──────────────┘│
-│                              │                              │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │                    Core Systems                      │  │
-│  │                                                      │  │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────────────┐ │  │
-│  │  │  Cache   │  │  Token   │  │  Error Handler   │ │  │
-│  │  │  System  │  │  Manager │  │  & Circuit       │ │  │
-│  │  │          │  │          │  │  Breaker         │ │  │
-│  │  │ • SQLite │  │ • GPT-3  │  │                  │ │  │
-│  │  │ • TTL    │  │   Encoder│  │ • Retry Logic    │ │  │
-│  │  │ • Memory │  │ • Smart  │  │ • Rate Limiting  │ │  │
-│  │  │   Cache  │  │   Truncate│ │ • Logging        │ │  │
-│  │  └──────────┘  └──────────┘  └──────────────────┘ │  │
-│  └─────────────────────────────────────────────────────┘  │
-│                              │                              │
-│  ┌─────────────────────────────────────────────────────┐  │
-│  │              External Integrations                   │  │
-│  │                                                      │  │
-│  │  • api.flutter.dev (Official Documentation)         │  │
-│  │  • pub.dev (Package Repository)                     │  │
-│  │  • api.dart.dev (Dart Documentation)               │  │
-│  └─────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+Client (Claude/Cursor) → MCP Protocol → Router → Tool → Response
 ```
 
-## Component Architecture
+## Key Components
 
-### 1. **MCP Server Layer**
-- **Purpose**: Handles MCP protocol communication
-- **Components**:
-  - `index.js`: Main entry point and request router
-  - Tool registration and dispatch
-  - Error handling and response formatting
+### 1. Tools
+Each tool lives in `src/tools/` and exports a single async function. Tools are self-contained - they handle their own validation, caching, and error handling.
 
-### 2. **Tool Layer**
+**New unified tools (v2.0):**
+- `flutter_search` - Universal search that's smart enough to know if you're looking for a widget, package, or example
+- `flutter_analyze` - One-stop shop for docs and analysis
+- `flutter_status` - Health check and stats
 
-#### Unified Tools (New in v2.0)
-- **flutter_search**: Universal search across Flutter ecosystem
-- **flutter_analyze**: Smart analysis and documentation fetcher
-- **flutter_status**: Health check and system status
+**Legacy tools:** Still around for backwards compatibility. Each focuses on a specific task like widget analysis, performance checks, or test generation.
 
-#### Legacy Tools (Backward Compatible)
-- Widget analysis and validation
-- Performance monitoring
-- Architecture compliance checking
-- Test generation
-- Bundle size analysis
-- And 9 more specialized tools
+### 2. Cache System
+We use a two-level cache to keep things fast:
+- **Memory cache**: Super fast, expires after 5 minutes
+- **SQLite cache**: Persists between restarts, configurable TTL per data type
 
-### 3. **Core Systems**
+The cache is smart - it knows Flutter docs don't change often (24h TTL) but package info might (12h TTL).
 
-#### Cache Manager
-```javascript
-class CacheManager {
-  - SQLite persistent storage
-  - In-memory cache (NodeCache)
-  - TTL-based expiration
-  - LRU eviction policy
-  - Size-based cleanup
-  - Statistics tracking
-}
-```
+### 3. Token Management
+Since LLMs have token limits, we built a smart truncation system that:
+- Counts tokens accurately using GPT-3 encoder
+- Prioritizes important content (descriptions, examples > metadata)
+- Maintains JSON structure when truncating objects
 
-#### Token Manager
-```javascript
-class TokenManager {
-  - Accurate token counting (GPT-3 encoder)
-  - Smart truncation algorithms
-  - Structure-preserving truncation
-  - Token budget management
-  - Content prioritization
-}
-```
+### 4. Error Handling
+We implemented circuit breakers for external APIs. If pub.dev goes down, we won't keep hammering it - we'll back off and try again later. Each service has its own breaker so one failure doesn't affect others.
 
-#### Error Handler
-```javascript
-class RobustErrorHandler {
-  - Circuit breaker pattern
-  - Exponential backoff retry
-  - Service-specific breakers
-  - Error logging and statistics
-  - Timeout protection
-}
-```
+## Data Flow Example
 
-### 4. **Service Layer**
+Let's say you search for "Container":
 
-#### Flutter Docs Service
-- Fetches official Flutter/Dart documentation
-- Parses and structures API documentation
-- Handles package documentation from pub.dev
-- Rate-limited requests
-- HTML parsing with Cheerio
+1. **Request comes in** → Router sends to `flutter_search`
+2. **Check cache** → Memory first, then SQLite
+3. **Cache miss?** → Query multiple sources in parallel:
+   - Flutter docs API
+   - Pub.dev search
+   - Local examples
+4. **Process results** → Merge, rank by relevance
+5. **Token check** → Truncate if needed
+6. **Cache result** → Store for next time
+7. **Return** → Send back to client
 
-## Data Flow
+## External Services
 
-### Request Processing
-1. Client sends MCP request
-2. Server validates and routes to appropriate tool
-3. Tool checks cache for existing results
-4. If cache miss, tool executes with error protection
-5. External API calls go through circuit breaker
-6. Results are processed and token-limited
-7. Results are cached with appropriate TTL
-8. Response sent back to client
+We integrate with:
+- `api.flutter.dev` - Official widget/class documentation
+- `pub.dev` - Package info and search
+- `api.dart.dev` - Dart core library docs
 
-### Caching Strategy
-```
-Request → Memory Cache → SQLite Cache → External API
-   ↓          ↓              ↓              ↓
-Response ← ← ← ← ← ← ← ← ← ← ← ← ← ← ← Result
-```
+All external calls go through:
+- Rate limiting (2 req/sec)
+- Circuit breakers
+- Retry with exponential backoff
+- Response caching
 
-## Design Patterns
+## Performance Tricks
 
-### 1. **Singleton Pattern**
-- Cache Manager
-- Token Manager
-- Error Handler
-- Flutter Docs Service
+1. **Parallel requests** - When searching, we hit all sources at once
+2. **Progressive loading** - Return partial results fast, details later
+3. **Smart caching** - Different TTLs for different data types
+4. **Lazy imports** - Tools only load what they need
 
-### 2. **Decorator Pattern**
-- `@withErrorHandling` for automatic error protection
-- `withCache` for automatic caching
+## Security Notes
 
-### 3. **Strategy Pattern**
-- Token truncation strategies
-- Cache eviction policies
+- No API keys stored in code
+- Input validation on all tools
+- SQL injection prevention via parameterized queries
+- No execution of user code (analysis only)
 
-### 4. **Circuit Breaker Pattern**
-- Prevents cascading failures
-- Automatic recovery
-- Service isolation
+## Extension Points
 
-### 5. **Repository Pattern**
-- Cache abstraction
-- Data access layer
+Want to add a new tool? Easy:
 
-## Performance Optimizations
+1. Create `src/tools/yourTool.js`
+2. Export an async function that returns MCP response format
+3. Register in `index.js`
+4. Add to README
 
-### 1. **Parallel Processing**
-- Concurrent API requests when possible
-- Promise.all for multiple searches
-- Non-blocking I/O
+The beauty is each tool is independent - you can't break existing tools by adding new ones.
 
-### 2. **Intelligent Caching**
-- Multi-level cache (memory + disk)
-- Service-specific TTLs
-- Smart invalidation
+## Why These Choices?
 
-### 3. **Token Optimization**
-- Early token counting
-- Progressive truncation
-- Priority-based content selection
+- **SQLite over Redis**: Simpler deployment, no extra services
+- **Node.js over Python**: Better MCP SDK support, async by default
+- **Unified tools**: Learned from user feedback - fewer, smarter tools > many specific ones
+- **Circuit breakers**: Production experience - external services will fail
 
-### 4. **Rate Limiting**
-- 2 requests/second to external APIs
-- Request queuing
-- Jitter for distributed requests
-
-## Security Considerations
-
-### 1. **Input Validation**
-- Schema validation for all inputs
-- SQL injection prevention (parameterized queries)
-- XSS prevention in HTML parsing
-
-### 2. **API Key Management**
-- No hardcoded credentials
-- Environment variable support
-- Secure storage recommendations
-
-### 3. **Error Information**
-- No sensitive data in error messages
-- Structured logging
-- Debug mode controls
-
-## Scalability
-
-### 1. **Horizontal Scaling**
-- Stateless design
-- Independent service instances
-- Shared cache capability
-
-### 2. **Resource Management**
-- Automatic cache cleanup
-- Memory usage monitoring
-- Connection pooling
-
-### 3. **Performance Monitoring**
-- Built-in metrics collection
-- Cache hit rates
-- Error rates by service
-
-## Future Enhancements
-
-### 1. **Planned Features**
-- WebSocket support
-- Real-time documentation updates
-- AI-powered code suggestions
-- Custom rule engine
-
-### 2. **Integration Points**
-- CI/CD pipeline integration
-- IDE plugin support
-- Custom analyzer rules
-
-### 3. **Performance Goals**
-- Sub-100ms response time
-- 95%+ cache hit rate
-- 99.9% uptime target
+That's the gist. The code is pretty readable if you want to dive deeper into any component.

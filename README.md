@@ -1,161 +1,376 @@
-# Flutter MCP Service
+# Flutter MCP Service v2.0
 
-A powerful MCP (Model Context Protocol) service designed specifically for Flutter developers. This service provides advanced widget analysis, validation against official documentation, pub.dev package analysis, and improvement suggestions based on Flutter best practices.
+Advanced Flutter development tools via Model Context Protocol (MCP) with intelligent caching, token management, and official documentation integration.
 
-## Key Features
+## 🚀 Quick Start
 
-### 🔍 Widget Analysis (`analyze_widget`)
-- Analyzes Flutter widget code for performance issues
-- Checks accessibility and best practices
-- Calculates complexity and nesting metrics
-- Detects common state management issues
-
-### 📚 Documentation Validation (`validate_flutter_docs`)
-- Validates code against official Flutter documentation
-- Detects deprecated APIs and suggests replacements
-- Verifies correct usage of widgets and properties
-- Provides links to relevant documentation
-
-### 📦 Pub.dev Package Analysis (`analyze_pub_package`)
-- Analyzes package quality and popularity
-- Verifies Flutter compatibility
-- Reviews dependencies and detects outdated versions
-- Performs basic security checks
-
-### 💡 Improvement Suggestions (`suggest_improvements`)
-- Suggests performance improvements
-- Accessibility recommendations
-- Maintainability and architecture improvements
-- Step-by-step implementation guides
-
-### ⚡ Performance Analysis (`analyze_performance`)
-- Detects unnecessary rebuild issues
-- Identifies potential memory leaks
-- Finds performance bottlenecks
-- Calculates performance metrics
-
-## Installation
-
+### Installation
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/dvillegastech/flutter_mcp_2.git
 cd flutter_mcp_service
 
 # Install dependencies
 npm install
-```
 
-## Usage
+# Initialize cache
+mkdir -p .cache
 
-### Start the service
+# Run health check
+npm run health-check
 
-```bash
+# Start service
 npm start
 ```
 
-### Development mode (with auto-reload)
+### Integration with Claude Desktop / Cursor
 
-```bash
-npm run dev
-```
-
-## Claude Desktop Integration
-
-Add the following configuration to your Claude Desktop configuration file:
-
+Add to your MCP configuration file:
 ```json
 {
   "mcpServers": {
     "flutter-mcp": {
       "command": "node",
-      "args": ["/path/to/flutter_mcp_service/src/index.js"]
+      "args": ["/absolute/path/to/flutter_mcp_service/src/index.js"]
     }
   }
 }
 ```
 
-## Usage Examples
+## 📋 Complete Tool List & Commands
 
-### Analyze a widget
+### 🆕 Unified Tools (v2.0)
 
-```javascript
-{
-  "tool": "analyze_widget",
-  "arguments": {
-    "widgetCode": "class MyWidget extends StatelessWidget {...}",
-    "checkAccessibility": true,
-    "checkPerformance": true
+#### 1. flutter_status
+Check service health and cache statistics.
+```
+@flutter-mcp use flutter_status to check service health
+```
+
+#### 2. flutter_search
+Universal search across Flutter/Dart documentation, packages, and examples.
+```
+@flutter-mcp use flutter_search with query "Container" and limit 5
+@flutter-mcp use flutter_search to find ListView examples
+```
+
+Parameters:
+- `query` (required): Search term
+- `limit` (optional): Max results (default: 10)
+- `maxTokens` (optional): Response size limit (default: 4000)
+
+#### 3. flutter_analyze
+Smart Flutter documentation fetcher and code analyzer.
+```
+@flutter-mcp use flutter_analyze with identifier "Container"
+@flutter-mcp use flutter_analyze with identifier "Container" and this code:
+Container(
+  width: 100,
+  height: 100,
+  color: Colors.blue,
+)
+```
+
+Parameters:
+- `identifier` (required): Widget/class name or package
+- `code` (optional): Code to analyze
+- `topic` (optional): "all", "docs", "analysis", "examples" (default: "all")
+- `maxTokens` (optional): Response size limit
+- `includeExamples` (optional): Include code examples (default: true)
+- `includeAnalysis` (optional): Include code analysis (default: true)
+
+### 🔧 Legacy Tools (Backward Compatible)
+
+#### 4. analyze_widget
+Analyze Flutter widget code for best practices, performance, and accessibility.
+```
+@flutter-mcp use analyze_widget with this widgetCode:
+class MyWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Text('Hello World'),
+    );
   }
 }
 ```
 
-### Validate against official documentation
+Parameters:
+- `widgetCode` (required): Flutter widget code
+- `checkAccessibility` (optional): Check accessibility (default: true)
+- `checkPerformance` (optional): Check performance (default: true)
 
-```javascript
-{
-  "tool": "validate_flutter_docs",
-  "arguments": {
-    "code": "Container(color: Colors.red, decoration: BoxDecoration(...))",
-    "widgetType": "Container"
+#### 5. validate_flutter_docs
+Validate code against official Flutter documentation.
+```
+@flutter-mcp use validate_flutter_docs with this code:
+Container(
+  color: Colors.red,
+  decoration: BoxDecoration(color: Colors.blue), // This will be flagged
+)
+```
+
+Parameters:
+- `code` (required): Flutter/Dart code
+- `widgetType` (optional): Specific widget to focus on
+
+#### 6. analyze_pub_package
+Analyze packages from pub.dev for quality and compatibility.
+```
+@flutter-mcp use analyze_pub_package with packageName "provider"
+@flutter-mcp use analyze_pub_package with packageName "dio" and checkDependencies true
+```
+
+Parameters:
+- `packageName` (required): Package name from pub.dev
+- `checkDependencies` (optional): Analyze dependencies (default: true)
+- `checkScores` (optional): Retrieve pub.dev scores (default: true)
+
+#### 7. suggest_improvements
+Get improvement suggestions based on Flutter best practices.
+```
+@flutter-mcp use suggest_improvements for this code:
+ListView(
+  children: List.generate(1000, (i) => Text('Item $i')),
+)
+```
+
+Parameters:
+- `code` (required): Flutter code
+- `focusArea` (optional): "performance", "accessibility", "maintainability", "all"
+
+#### 8. analyze_performance
+Analyze Flutter widget tree for performance issues.
+```
+@flutter-mcp use analyze_performance with this widgetTree:
+Column(
+  children: [
+    for (int i = 0; i < 100; i++)
+      Container(child: Text('Item $i')),
+  ],
+)
+```
+
+Parameters:
+- `widgetTree` (required): Widget tree code
+- `checkRebuildOptimization` (optional): Check rebuilds (default: true)
+- `checkMemoryLeaks` (optional): Check memory leaks (default: true)
+
+#### 9. analyze_architecture
+Analyze project architecture compliance.
+```
+@flutter-mcp use analyze_architecture with projectStructure {
+  "lib": {
+    "features": ["auth", "home", "profile"],
+    "core": ["network", "database"],
+    "shared": ["widgets", "utils"]
+  }
+} and pattern "clean"
+```
+
+Parameters:
+- `projectStructure` (required): Project directory structure
+- `pattern` (optional): "clean", "mvvm", "mvc", "auto"
+- `checkDependencies` (optional): Check dependency violations (default: true)
+
+#### 10. analyze_bundle_size
+Analyze app bundle size with optimization recommendations.
+```
+@flutter-mcp use analyze_bundle_size with buildPath "/path/to/build" and platform "android"
+```
+
+Parameters:
+- `buildPath` (required): Path to build output
+- `platform` (optional): "android", "ios", "web", "all"
+- `includeAssets` (optional): Include asset analysis (default: true)
+
+#### 11. generate_tests
+Generate comprehensive Flutter tests.
+```
+@flutter-mcp use generate_tests for this widgetCode:
+class CounterButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final int count;
+  
+  const CounterButton({required this.onPressed, required this.count});
+  
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      child: Text('Count: $count'),
+    );
   }
 }
 ```
 
-### Analyze a pub.dev package
+Parameters:
+- `widgetCode` (required): Widget code
+- `testType` (optional): "unit", "widget", "integration", "golden", "all"
+- `includeAccessibility` (optional): Include accessibility tests (default: true)
 
-```javascript
-{
-  "tool": "analyze_pub_package",
-  "arguments": {
-    "packageName": "provider",
-    "checkDependencies": true,
-    "checkScores": true
-  }
+#### 12. trace_state
+Trace state flow and rebuilds in Flutter widgets.
+```
+@flutter-mcp use trace_state with this widgetCode:
+class MyStatefulWidget extends StatefulWidget {
+  // ... widget code
 }
 ```
 
-## Project Structure
+Parameters:
+- `widgetCode` (required): Widget code
+- `traceRebuildPaths` (optional): Trace rebuilds (default: true)
+- `generateVisualization` (optional): Generate visualization (default: true)
 
+#### 13. generate_clean_architecture
+Generate Clean Architecture structure.
 ```
-flutter_mcp_service/
-├── src/
-│   ├── index.js              # Main entry point
-│   ├── tools/                # Tool implementations
-│   │   ├── widgetAnalyzer.js
-│   │   ├── docsValidator.js
-│   │   ├── pubAnalyzer.js
-│   │   ├── improvementSuggester.js
-│   │   └── performanceAnalyzer.js
-│   ├── utils/                # Shared utilities
-│   │   ├── parser.js
-│   │   ├── codeAnalyzer.js
-│   │   └── treeParser.js
-│   └── validators/           # Validators and patterns
-│       ├── bestPractices.js
-│       ├── apiPatterns.js
-│       └── patterns.js
-├── tests/                    # Unit tests
-├── docs/                     # Additional documentation
-├── package.json
-└── README.md
+@flutter-mcp use generate_clean_architecture with projectName "todo_app" and features ["auth", "todos", "settings"]
 ```
 
-## Detected Best Practices
+Parameters:
+- `projectName` (required): Project/feature name
+- `features` (required): List of features
+- `stateManagement` (optional): "riverpod", "bloc", "provider", "getx"
+- `includeDI` (optional): Include dependency injection (default: true)
 
-- **Performance**: const constructors usage, ListView.builder, keys in lists
-- **Accessibility**: Semantics widgets, image labels, tooltips
-- **Memory**: Controller disposal, subscription cancellation
-- **Architecture**: Layer separation, design patterns, immutable state
+#### 14. generate_l10n
+Generate localization setup with ARB files.
+```
+@flutter-mcp use generate_l10n with languages ["en", "es", "fr"]
+```
 
-## Contributing
+Parameters:
+- `languages` (required): Language codes to support
+- `translations` (optional): Initial translations
+- `includeRTL` (optional): Include RTL support (default: true)
+- `includePluralization` (optional): Include pluralization (default: true)
 
-Contributions are welcome! Please:
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+#### 15. monitor_performance
+Generate performance monitoring setup.
+```
+@flutter-mcp use monitor_performance with monitoringType "balanced"
+```
 
-## License
+Parameters:
+- `monitoringType` (required): "comprehensive", "balanced", "lightweight"
+- `includeNetwork` (optional): Monitor network (default: true)
+- `includeMemory` (optional): Monitor memory (default: true)
+- `includeAnalytics` (optional): Include analytics (default: true)
 
-This project is licensed under the MIT License.
+#### 16. diagnose_render_issues
+Diagnose and fix rendering issues.
+```
+@flutter-mcp use diagnose_render_issues with this widgetCode:
+Row(
+  children: [
+    Expanded(child: Text('Long text')),
+    Container(width: double.infinity), // This will cause issues
+  ],
+)
+```
+
+Parameters:
+- `widgetCode` (required): Widget code with issues
+- `errorType` (optional): "overflow", "constraint", "layout", "all"
+- `includeVisualization` (optional): Include debug visualization (default: true)
+
+#### 17. analyze_test_coverage
+Analyze test coverage with recommendations.
+```
+@flutter-mcp use analyze_test_coverage with coverageData {...} and targetCoverage 80
+```
+
+Parameters:
+- `coverageData` (required): Coverage data from lcov
+- `projectStructure` (required): Project file structure
+- `targetCoverage` (optional): Target percentage (default: 80)
+- `generateReport` (optional): Generate visual report (default: true)
+
+## 🎯 Usage Examples
+
+### Basic Widget Analysis
+```
+@flutter-mcp analyze this Flutter widget for issues:
+Container(
+  child: Column(
+    children: List.generate(100, (i) => Text('Item $i')),
+  ),
+)
+```
+
+### Package Research
+```
+@flutter-mcp search for "state management" packages and analyze the top result
+```
+
+### Performance Optimization Workflow
+```
+1. @flutter-mcp analyze_performance for my widget tree
+2. @flutter-mcp suggest_improvements based on performance issues
+3. @flutter-mcp generate_tests for the optimized code
+```
+
+### Full Project Analysis
+```
+@flutter-mcp analyze_architecture for my project and suggest clean architecture improvements
+```
+
+## 🔧 Development Commands
+
+```bash
+# Development with auto-reload
+npm run dev
+
+# Run tests
+npm test
+npm run test:integration
+npm run test:coverage
+
+# Health check
+npm run health-check
+
+# Linting and formatting
+npm run lint
+npm run format
+
+# Docker
+npm run build:docker
+npm run docker:run
+
+# Clean cache
+npm run clean
+```
+
+## 📊 Features
+
+- **Intelligent Caching**: SQLite + in-memory cache with TTL
+- **Token Management**: Smart truncation with GPT-3 encoder
+- **Error Handling**: Circuit breaker pattern with retry logic
+- **Rate Limiting**: Respectful API usage (2 req/sec)
+- **Official Docs Integration**: Real-time Flutter/Dart documentation
+- **Multi-platform**: npm, Docker, direct installation
+- **Health Monitoring**: Built-in health checks and statistics
+
+## 🏗️ Architecture
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture documentation.
+
+## 🤝 Contributing
+
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for development guidelines.
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Flutter team for excellent documentation
+- MCP SDK contributors
+- Inspired by adamsmaka/flutter-mcp
+
+---
+
+Made with ❤️ for the Flutter community

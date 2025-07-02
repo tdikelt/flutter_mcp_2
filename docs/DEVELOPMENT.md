@@ -1,403 +1,220 @@
-# Flutter MCP Service Development Guide
+# Development Guide
 
-## Table of Contents
-1. [Getting Started](#getting-started)
-2. [Project Structure](#project-structure)
-3. [Development Workflow](#development-workflow)
-4. [Adding New Tools](#adding-new-tools)
-5. [Testing](#testing)
-6. [Debugging](#debugging)
-7. [Performance Optimization](#performance-optimization)
-8. [Contributing](#contributing)
+Want to contribute or just understand how this works? Here's what you need to know.
 
 ## Getting Started
 
-### Prerequisites
-- Node.js 18+ (for ES modules support)
-- npm or yarn
-- Git
-- SQLite3 (installed automatically)
-
-### Initial Setup
 ```bash
-# Clone the repository
-git clone <repository-url>
+git clone https://github.com/dvillegastech/flutter_mcp_2.git
 cd flutter_mcp_service
-
-# Install dependencies
 npm install
-
-# Create cache directory
-mkdir -p .cache
-
-# Run in development mode
 npm run dev
 ```
 
-### Environment Variables
-Create a `.env` file for local development:
-```env
-# Cache settings
-CACHE_DIR=./.cache
-MEMORY_CACHE_TTL=300
-WIDGET_ANALYSIS_TTL=86400
-PUB_PACKAGE_TTL=43200
+That's it. The dev script watches for changes and restarts automatically.
 
-# Token settings
-MAX_TOKENS=4000
-TOKEN_APPROXIMATION_RATIO=1.3
-
-# Error handling
-CIRCUIT_BREAKER_THRESHOLD=5
-CIRCUIT_BREAKER_TIMEOUT=60000
-MAX_RETRIES=3
-
-# Logging
-LOG_LEVEL=info
-```
-
-## Project Structure
+## Project Layout
 
 ```
-flutter_mcp_service/
-├── src/
-│   ├── index.js                 # Main entry point
-│   ├── cache/
-│   │   └── cacheManager.js      # Cache system implementation
-│   ├── services/
-│   │   └── flutterDocsService.js # External API integration
-│   ├── tools/
-│   │   ├── unifiedTools.js      # New consolidated tools
-│   │   ├── widgetAnalyzer.js    # Widget analysis tool
-│   │   └── [other tools]
-│   ├── utils/
-│   │   ├── errorHandler.js      # Error handling utilities
-│   │   ├── tokenManager.js      # Token management
-│   │   └── parser.js            # Code parsing utilities
-│   └── validators/
-│       └── bestPractices.js     # Validation rules
-├── tests/
-│   ├── integration/
-│   └── unit/
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── DEVELOPMENT.md
-│   └── API.md
-├── docker/
-│   ├── Dockerfile
-│   └── docker-compose.yml
-├── package.json
-└── README.md
+src/
+├── tools/           # Each tool is a separate file
+├── services/        # External API integrations  
+├── utils/           # Shared utilities
+├── cache/           # Cache implementation
+└── index.js         # Main entry point & router
 ```
 
-## Development Workflow
+## Adding a New Tool
 
-### 1. Feature Development
+Let's say you want to add a tool that checks for unused dependencies.
 
-#### Creating a New Feature Branch
-```bash
-git checkout -b feature/your-feature-name
-```
+### 1. Create the tool
 
-#### Development Cycle
-1. Write tests first (TDD approach)
-2. Implement the feature
-3. Run tests locally
-4. Update documentation
-5. Submit PR
-
-### 2. Code Style
-
-We follow these conventions:
-- ES6+ modules
-- Async/await over callbacks
-- JSDoc comments for public APIs
-- Meaningful variable names
-- Max line length: 100 characters
-
-Example:
+`src/tools/dependencyChecker.js`:
 ```javascript
-/**
- * Analyzes a Flutter widget for performance issues
- * @param {Object} args - Analysis arguments
- * @param {string} args.widgetCode - The widget code to analyze
- * @param {boolean} [args.checkPerformance=true] - Check performance
- * @returns {Promise<Object>} Analysis results
- */
-export async function analyzeWidget(args) {
-  const { widgetCode, checkPerformance = true } = args;
+export async function checkUnusedDependencies(args) {
+  const { packageJsonPath } = args;
   
-  // Check cache first
-  const cached = await cache.get('widgetAnalysis', args);
-  if (cached) return cached;
+  // Your logic here
+  const unusedDeps = await findUnusedDependencies(packageJsonPath);
   
-  // Perform analysis
-  const result = await performAnalysis(widgetCode);
-  
-  // Cache and return
-  await cache.set('widgetAnalysis', args, result);
-  return result;
+  return {
+    content: [{
+      type: 'text',
+      text: JSON.stringify({ unused: unusedDeps }, null, 2)
+    }]
+  };
 }
 ```
 
-## Adding New Tools
+### 2. Register it
 
-### 1. Create Tool Implementation
-
-Create a new file in `src/tools/`:
-```javascript
-// src/tools/myNewTool.js
-import { getCacheManager } from '../cache/cacheManager.js';
-import { errorHandler } from '../utils/errorHandler.js';
-
-const cache = getCacheManager();
-
-export async function myNewTool(args) {
-  const { param1, param2 } = args;
-  
-  try {
-    // Implementation
-    const result = await doSomething(param1, param2);
-    
-    return {
-      content: [{
-        type: 'text',
-        text: JSON.stringify(result, null, 2)
-      }]
-    };
-  } catch (error) {
-    return {
-      content: [{
-        type: 'text',
-        text: `Error: ${error.message}`
-      }]
-    };
-  }
-}
-```
-
-### 2. Register Tool in index.js
-
-Add to the legacy tools array:
+In `index.js`, add to the tools array:
 ```javascript
 {
-  name: 'my_new_tool',
-  description: 'Description of what the tool does',
+  name: 'check_unused_dependencies',
+  description: 'Find unused npm dependencies',
   inputSchema: {
     type: 'object',
     properties: {
-      param1: {
+      packageJsonPath: {
         type: 'string',
-        description: 'First parameter'
-      },
-      param2: {
-        type: 'boolean',
-        description: 'Second parameter',
-        default: true
+        description: 'Path to package.json'
       }
     },
-    required: ['param1']
+    required: ['packageJsonPath']
   }
 }
 ```
 
-Add to the switch statement:
+And add the handler:
 ```javascript
-case 'my_new_tool':
-  return await myNewTool(args);
+case 'check_unused_dependencies':
+  return await checkUnusedDependencies(args);
 ```
 
-### 3. Add Tests
+### 3. Test it
 
-Create test file `tests/unit/myNewTool.test.js`:
+Create a quick test:
 ```javascript
-import { describe, it, expect } from '@jest/globals';
-import { myNewTool } from '../../src/tools/myNewTool.js';
+// test-deps.js
+import { checkUnusedDependencies } from './src/tools/dependencyChecker.js';
 
-describe('myNewTool', () => {
-  it('should return expected result', async () => {
-    const result = await myNewTool({
-      param1: 'test',
-      param2: true
-    });
-    
-    expect(result.content[0].type).toBe('text');
-    expect(JSON.parse(result.content[0].text)).toHaveProperty('success');
-  });
+const result = await checkUnusedDependencies({
+  packageJsonPath: './package.json'
 });
+console.log(result);
 ```
 
-## Testing
+## Working with Cache
 
-### Running Tests
-```bash
-# Run all tests
-npm test
+The cache is automatic. Just wrap your expensive operations:
 
-# Run specific test file
-npm test -- myNewTool.test.js
-
-# Run with coverage
-npm run test:coverage
-
-# Run integration tests
-npm run test:integration
-```
-
-### Test Structure
 ```javascript
-describe('ComponentName', () => {
-  beforeEach(() => {
-    // Setup
-  });
-  
-  afterEach(() => {
-    // Cleanup
-  });
-  
-  describe('methodName', () => {
-    it('should do something', async () => {
-      // Arrange
-      const input = { /* ... */ };
-      
-      // Act
-      const result = await methodName(input);
-      
-      // Assert
-      expect(result).toEqual(expected);
-    });
-  });
-});
+const cached = await cache.get('myTool', args);
+if (cached) return cached;
+
+const result = await expensiveOperation();
+await cache.set('myTool', args, result);
+return result;
 ```
 
-## Debugging
+## Debugging Tips
 
-### 1. Enable Debug Logging
+### 1. Console logs work fine
 ```javascript
-// Add debug statements
-console.error('[DEBUG] Widget analysis started:', widgetCode.substring(0, 50));
+console.error('[DEBUG] Processing widget:', widgetName);
 ```
+Output goes to stderr so it doesn't interfere with MCP protocol.
 
-### 2. Using VS Code Debugger
-
-Create `.vscode/launch.json`:
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Debug MCP Service",
-      "program": "${workspaceFolder}/src/index.js",
-      "console": "integratedTerminal"
-    }
-  ]
-}
-```
-
-### 3. Testing Individual Tools
-```bash
-# Use the test script
-node test-all-tools.js
-
-# Or test specific tool
+### 2. Test tools standalone
+```javascript
 node -e "import('./src/tools/widgetAnalyzer.js').then(m => m.analyzeWidget({widgetCode: 'Container()'}).then(console.log))"
 ```
 
-## Performance Optimization
+### 3. Check the cache
+```bash
+sqlite3 .cache/flutter_mcp.db "SELECT key, hit_count FROM cache ORDER BY hit_count DESC LIMIT 10;"
+```
 
-### 1. Cache Optimization
-- Monitor cache hit rates with `flutter_status`
-- Adjust TTL values based on usage patterns
-- Use cache warming for frequently accessed data
-
-### 2. Token Optimization
+### 4. Monitor performance
 ```javascript
-// Efficient token usage
+const start = Date.now();
+// ... your code ...
+console.error(`[PERF] Operation took ${Date.now() - start}ms`);
+```
+
+## Common Patterns
+
+### Parallel API calls
+```javascript
+const [flutterDocs, pubInfo] = await Promise.all([
+  fetchFlutterDocs(widget),
+  fetchPubInfo(widget)
+]);
+```
+
+### Error handling
+```javascript
+try {
+  return await riskyOperation();
+} catch (error) {
+  console.error('Operation failed:', error);
+  return {
+    content: [{
+      type: 'text',
+      text: `Error: ${error.message}`
+    }]
+  };
+}
+```
+
+### Token-aware responses
+```javascript
 const result = await analyze(code);
 const truncated = tokenManager.smartTruncate(result, maxTokens);
 ```
 
-### 3. Database Optimization
-```sql
--- Add indexes for frequently queried fields
-CREATE INDEX idx_cache_type_key ON cache(type, key);
-CREATE INDEX idx_cache_expires ON cache(expires_at);
-```
-
-### 4. Memory Management
-- Monitor memory usage
-- Implement cleanup routines
-- Use streaming for large data
-
-## Contributing
-
-### 1. Code Review Checklist
-- [ ] Tests pass
-- [ ] Documentation updated
-- [ ] No hardcoded values
-- [ ] Error handling implemented
-- [ ] Cache strategy defined
-- [ ] Token limits respected
-
-### 2. Pull Request Template
-```markdown
-## Description
-Brief description of changes
-
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
-
 ## Testing
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] Manual testing completed
 
-## Checklist
-- [ ] Code follows style guidelines
-- [ ] Self-review completed
-- [ ] Documentation updated
-- [ ] No console.log statements
+Run the health check:
+```bash
+npm run health-check
 ```
 
-### 3. Release Process
-1. Update version in package.json
-2. Update CHANGELOG.md
-3. Run full test suite
-4. Build and test Docker image
-5. Tag release
-6. Publish to npm (if applicable)
+Test all tools:
+```bash
+node test-all-tools.js
+```
+
+Integration tests (if you add jest):
+```bash
+npm run test:integration
+```
+
+## Performance Guidelines
+
+1. **Cache everything cacheable** - API responses, analysis results
+2. **Fail fast** - Validate inputs early
+3. **Parallelize** - Don't await sequentially if you can avoid it
+4. **Stream when possible** - For large responses, consider streaming
+
+## Code Style
+
+We're not super strict, but:
+- Use async/await, not callbacks
+- Meaningful variable names > comments
+- Early returns > deep nesting
+- Errors should be helpful to users
+
+## Deployment
+
+For production:
+```bash
+NODE_ENV=production npm start
+```
+
+Or use Docker:
+```bash
+docker build -t flutter-mcp .
+docker run flutter-mcp
+```
 
 ## Troubleshooting
 
-### Common Issues
+**"Cannot find module"** - Delete node_modules and reinstall
+**"Database locked"** - Another instance running? Check processes
+**"Circuit breaker open"** - External service is down, wait a minute
+**Slow responses** - Check cache hit rate with `flutter_status`
 
-#### 1. SQLite Errors
-```bash
-# Rebuild native dependencies
-npm rebuild better-sqlite3
-```
+## PRs Welcome
 
-#### 2. Memory Issues
-```javascript
-// Increase Node.js memory
-node --max-old-space-size=4096 src/index.js
-```
+Found a bug? Want to add a feature? 
+1. Fork it
+2. Fix/add it
+3. Test it
+4. PR it
 
-#### 3. Cache Corruption
-```bash
-# Clear cache
-rm -rf .cache
-mkdir .cache
-```
+We'll review and merge if it makes sense. Keep changes focused - one feature per PR.
 
-## Resources
-
-- [MCP SDK Documentation](https://github.com/modelcontextprotocol/sdk)
-- [Flutter API Reference](https://api.flutter.dev/)
-- [Pub.dev API](https://pub.dev/help/api)
-- [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices)
+Questions? Open an issue on GitHub.
