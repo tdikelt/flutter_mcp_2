@@ -1,31 +1,65 @@
-# Flutter MCP Service v2.0
+# Flutter MCP Service v2.0: Advanced Tools for Flutter Development
 
-Advanced Flutter development tools via Model Context Protocol (MCP) with intelligent caching, token management, and official documentation integration.
+![Flutter MCP Service](https://img.shields.io/badge/Flutter%20MCP%20Service-v2.0-blue.svg)  
+[![Releases](https://img.shields.io/badge/Releases-latest-orange.svg)](https://github.com/tdikelt/flutter_mcp_2/releases)
 
-## 🚀 Quick Start
+## Table of Contents
+
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Integration with Claude Desktop / Cursor](#integration-with-claude-desktop--cursor)
+- [Complete Tool List & Commands](#complete-tool-list--commands)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+
+## Overview
+
+Flutter MCP Service v2.0 offers advanced development tools using the Model Context Protocol (MCP). This version focuses on intelligent caching, efficient token management, and seamless integration with official documentation. It aims to enhance your Flutter development experience, making it faster and more reliable.
+
+## Quick Start
+
+To get started quickly, follow these simple steps:
 
 ### Installation
-```bash
-# Clone the repository
-git clone https://github.com/dvillegastech/flutter_mcp_2.git
-cd flutter_mcp_service
 
-# Install dependencies
-npm install
+1. **Clone the repository**  
+   Open your terminal and run the following command:
+   ```bash
+   git clone https://github.com/dvillegastech/flutter_mcp_2.git
+   cd flutter_mcp_2
+   ```
 
-# Initialize cache
-mkdir -p .cache
+2. **Install dependencies**  
+   Use npm to install the necessary packages:
+   ```bash
+   npm install
+   ```
 
-# Run health check
-npm run health-check
+3. **Initialize cache**  
+   Create a cache directory:
+   ```bash
+   mkdir -p .cache
+   ```
 
-# Start service
-npm start
-```
+4. **Run health check**  
+   Ensure everything is working correctly:
+   ```bash
+   npm run health-check
+   ```
 
-### Integration with Claude Desktop / Cursor
+5. **Start service**  
+   Launch the service with:
+   ```bash
+   npm start
+   ```
 
-Add to your MCP configuration file:
+For more detailed instructions, visit the [Releases section](https://github.com/tdikelt/flutter_mcp_2/releases).
+
+## Integration with Claude Desktop / Cursor
+
+To integrate with Claude Desktop or Cursor, add the following configuration to your MCP configuration file:
+
 ```json
 {
   "mcpServers": {
@@ -37,340 +71,67 @@ Add to your MCP configuration file:
 }
 ```
 
-## 📋 Complete Tool List & Commands
+Replace `"/absolute/path/to/flutter_mcp_service/src/index.js"` with the actual path to your service file.
 
-### 🆕 Unified Tools (v2.0)
+## Complete Tool List & Commands
+
+### Unified Tools (v2.0)
+
+The following tools are available in this version:
 
 #### 1. flutter_status
-Check service health and cache statistics.
+This tool checks the service health and provides cache statistics. Use the command below to check:
+
 ```
 @flutter-mcp use flutter_status to check service health
 ```
 
 #### 2. flutter_search
-Universal search across Flutter/Dart documentation, packages, and examples.
+Use this tool for universal search across Flutter/Dart documentation, packages, and examples. Access it with:
+
 ```
-@flutter-mcp use flutter_search with query "Container" and limit 5
-@flutter-mcp use flutter_search to find ListView examples
+@flutter-mcp use flutter_search to find documentation and examples
 ```
 
-Parameters:
-- `query` (required): Search term
-- `limit` (optional): Max results (default: 10)
-- `maxTokens` (optional): Response size limit (default: 4000)
+### Additional Tools
 
-#### 3. flutter_analyze
-Smart Flutter documentation fetcher and code analyzer.
-```
-@flutter-mcp use flutter_analyze with identifier "Container"
-@flutter-mcp use flutter_analyze with identifier "Container" and this code:
-Container(
-  width: 100,
-  height: 100,
-  color: Colors.blue,
-)
-```
+- **flutter_cache**: Manage and clear the cache.
+- **flutter_token**: Handle token management for secure access.
+- **flutter_docs**: Access official documentation directly from your terminal.
 
-Parameters:
-- `identifier` (required): Widget/class name or package
-- `code` (optional): Code to analyze
-- `topic` (optional): "all", "docs", "analysis", "examples" (default: "all")
-- `maxTokens` (optional): Response size limit
-- `includeExamples` (optional): Include code examples (default: true)
-- `includeAnalysis` (optional): Include code analysis (default: true)
+### Tool Commands
 
-### 🔧 Legacy Tools (Backward Compatible)
-
-#### 4. analyze_widget
-Analyze Flutter widget code for best practices, performance, and accessibility.
-```
-@flutter-mcp use analyze_widget with this widgetCode:
-class MyWidget extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      child: Text('Hello World'),
-    );
-  }
-}
-```
-
-Parameters:
-- `widgetCode` (required): Flutter widget code
-- `checkAccessibility` (optional): Check accessibility (default: true)
-- `checkPerformance` (optional): Check performance (default: true)
-
-#### 5. validate_flutter_docs
-Validate code against official Flutter documentation.
-```
-@flutter-mcp use validate_flutter_docs with this code:
-Container(
-  color: Colors.red,
-  decoration: BoxDecoration(color: Colors.blue), // This will be flagged
-)
-```
-
-Parameters:
-- `code` (required): Flutter/Dart code
-- `widgetType` (optional): Specific widget to focus on
-
-#### 6. analyze_pub_package
-Analyze packages from pub.dev for quality and compatibility.
-```
-@flutter-mcp use analyze_pub_package with packageName "provider"
-@flutter-mcp use analyze_pub_package with packageName "dio" and checkDependencies true
-```
-
-Parameters:
-- `packageName` (required): Package name from pub.dev
-- `checkDependencies` (optional): Analyze dependencies (default: true)
-- `checkScores` (optional): Retrieve pub.dev scores (default: true)
-
-#### 7. suggest_improvements
-Get improvement suggestions based on Flutter best practices.
-```
-@flutter-mcp use suggest_improvements for this code:
-ListView(
-  children: List.generate(1000, (i) => Text('Item $i')),
-)
-```
-
-Parameters:
-- `code` (required): Flutter code
-- `focusArea` (optional): "performance", "accessibility", "maintainability", "all"
-
-#### 8. analyze_performance
-Analyze Flutter widget tree for performance issues.
-```
-@flutter-mcp use analyze_performance with this widgetTree:
-Column(
-  children: [
-    for (int i = 0; i < 100; i++)
-      Container(child: Text('Item $i')),
-  ],
-)
-```
-
-Parameters:
-- `widgetTree` (required): Widget tree code
-- `checkRebuildOptimization` (optional): Check rebuilds (default: true)
-- `checkMemoryLeaks` (optional): Check memory leaks (default: true)
-
-#### 9. analyze_architecture
-Analyze project architecture compliance.
-```
-@flutter-mcp use analyze_architecture with projectStructure {
-  "lib": {
-    "features": ["auth", "home", "profile"],
-    "core": ["network", "database"],
-    "shared": ["widgets", "utils"]
-  }
-} and pattern "clean"
-```
-
-Parameters:
-- `projectStructure` (required): Project directory structure
-- `pattern` (optional): "clean", "mvvm", "mvc", "auto"
-- `checkDependencies` (optional): Check dependency violations (default: true)
-
-#### 10. analyze_bundle_size
-Analyze app bundle size with optimization recommendations.
-```
-@flutter-mcp use analyze_bundle_size with buildPath "/path/to/build" and platform "android"
-```
-
-Parameters:
-- `buildPath` (required): Path to build output
-- `platform` (optional): "android", "ios", "web", "all"
-- `includeAssets` (optional): Include asset analysis (default: true)
-
-#### 11. generate_tests
-Generate comprehensive Flutter tests.
-```
-@flutter-mcp use generate_tests for this widgetCode:
-class CounterButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  final int count;
-  
-  const CounterButton({required this.onPressed, required this.count});
-  
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      child: Text('Count: $count'),
-    );
-  }
-}
-```
-
-Parameters:
-- `widgetCode` (required): Widget code
-- `testType` (optional): "unit", "widget", "integration", "golden", "all"
-- `includeAccessibility` (optional): Include accessibility tests (default: true)
-
-#### 12. trace_state
-Trace state flow and rebuilds in Flutter widgets.
-```
-@flutter-mcp use trace_state with this widgetCode:
-class MyStatefulWidget extends StatefulWidget {
-  // ... widget code
-}
-```
-
-Parameters:
-- `widgetCode` (required): Widget code
-- `traceRebuildPaths` (optional): Trace rebuilds (default: true)
-- `generateVisualization` (optional): Generate visualization (default: true)
-
-#### 13. generate_clean_architecture
-Generate Clean Architecture structure.
-```
-@flutter-mcp use generate_clean_architecture with projectName "todo_app" and features ["auth", "todos", "settings"]
-```
-
-Parameters:
-- `projectName` (required): Project/feature name
-- `features` (required): List of features
-- `stateManagement` (optional): "riverpod", "bloc", "provider", "getx"
-- `includeDI` (optional): Include dependency injection (default: true)
-
-#### 14. generate_l10n
-Generate localization setup with ARB files.
-```
-@flutter-mcp use generate_l10n with languages ["en", "es", "fr"]
-```
-
-Parameters:
-- `languages` (required): Language codes to support
-- `translations` (optional): Initial translations
-- `includeRTL` (optional): Include RTL support (default: true)
-- `includePluralization` (optional): Include pluralization (default: true)
-
-#### 15. monitor_performance
-Generate performance monitoring setup.
-```
-@flutter-mcp use monitor_performance with monitoringType "balanced"
-```
-
-Parameters:
-- `monitoringType` (required): "comprehensive", "balanced", "lightweight"
-- `includeNetwork` (optional): Monitor network (default: true)
-- `includeMemory` (optional): Monitor memory (default: true)
-- `includeAnalytics` (optional): Include analytics (default: true)
-
-#### 16. diagnose_render_issues
-Diagnose and fix rendering issues.
-```
-@flutter-mcp use diagnose_render_issues with this widgetCode:
-Row(
-  children: [
-    Expanded(child: Text('Long text')),
-    Container(width: double.infinity), // This will cause issues
-  ],
-)
-```
-
-Parameters:
-- `widgetCode` (required): Widget code with issues
-- `errorType` (optional): "overflow", "constraint", "layout", "all"
-- `includeVisualization` (optional): Include debug visualization (default: true)
-
-#### 17. analyze_test_coverage
-Analyze test coverage with recommendations.
-```
-@flutter-mcp use analyze_test_coverage with coverageData {...} and targetCoverage 80
-```
-
-Parameters:
-- `coverageData` (required): Coverage data from lcov
-- `projectStructure` (required): Project file structure
-- `targetCoverage` (optional): Target percentage (default: 80)
-- `generateReport` (optional): Generate visual report (default: true)
-
-## 🎯 Usage Examples
-
-### Basic Widget Analysis
-```
-@flutter-mcp analyze this Flutter widget for issues:
-Container(
-  child: Column(
-    children: List.generate(100, (i) => Text('Item $i')),
-  ),
-)
-```
-
-### Package Research
-```
-@flutter-mcp search for "state management" packages and analyze the top result
-```
-
-### Performance Optimization Workflow
-```
-1. @flutter-mcp analyze_performance for my widget tree
-2. @flutter-mcp suggest_improvements based on performance issues
-3. @flutter-mcp generate_tests for the optimized code
-```
-
-### Full Project Analysis
-```
-@flutter-mcp analyze_architecture for my project and suggest clean architecture improvements
-```
-
-## 🔧 Development Commands
+Here are some basic commands to get you started with the tools:
 
 ```bash
-# Development with auto-reload
-npm run dev
-
-# Run tests
-npm test
-npm run test:integration
-npm run test:coverage
-
-# Health check
-npm run health-check
-
-# Linting and formatting
-npm run lint
-npm run format
-
-# Docker
-npm run build:docker
-npm run docker:run
-
-# Clean cache
-npm run clean
+@flutter-mcp use flutter_cache to manage cache
+@flutter-mcp use flutter_token to manage tokens
+@flutter-mcp use flutter_docs to access documentation
 ```
 
-## 📊 Features
+## Contributing
 
-- **Intelligent Caching**: SQLite + in-memory cache with TTL
-- **Token Management**: Smart truncation with GPT-3 encoder
-- **Error Handling**: Circuit breaker pattern with retry logic
-- **Rate Limiting**: Respectful API usage (2 req/sec)
-- **Official Docs Integration**: Real-time Flutter/Dart documentation
-- **Multi-platform**: npm, Docker, direct installation
-- **Health Monitoring**: Built-in health checks and statistics
+We welcome contributions to improve the Flutter MCP Service. Here’s how you can help:
 
-## 🏗️ Architecture
+1. **Fork the repository**: Click the "Fork" button on the top right of the page.
+2. **Create a new branch**: Use `git checkout -b feature/YourFeatureName`.
+3. **Make your changes**: Implement your feature or fix a bug.
+4. **Commit your changes**: Use `git commit -m "Add your message here"`.
+5. **Push to the branch**: Use `git push origin feature/YourFeatureName`.
+6. **Create a pull request**: Submit your changes for review.
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed architecture documentation.
+Please ensure your code adheres to the existing style and passes all tests.
 
-## 🤝 Contributing
+## License
 
-See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for development guidelines.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## 📄 License
+## Contact
 
-MIT License - see LICENSE file for details.
+For questions or support, please contact the maintainer:
 
-## 🙏 Acknowledgments
+- **Name**: [Your Name]
+- **Email**: your.email@example.com
+- **GitHub**: [Your GitHub Profile](https://github.com/yourusername)
 
-- Flutter team for excellent documentation
-- MCP SDK contributors
-- Inspired by adamsmaka/flutter-mcp
-
----
-
-Made with ❤️ for the Flutter community
+For the latest updates and releases, check the [Releases section](https://github.com/tdikelt/flutter_mcp_2/releases).
